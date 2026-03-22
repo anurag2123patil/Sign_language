@@ -21,8 +21,8 @@ import WordsModule from '../screens/student/WordsModule';
 import SentencesModule from '../screens/student/SentencesModule';
 import MathModule from '../screens/student/MathModule';
 import ScienceModule from '../screens/student/ScienceModule';
-// import CameraGestureScreen from './CameraGestureScreen';
 import CameraGestureScreen from '../screens/student/CameraGestureScreen';
+import CameraNumberScreen from '../screens/student/Cameranumberscreen';
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
@@ -82,6 +82,11 @@ const DashboardStack = () => (
     <Stack.Screen
       name="CameraGesture"
       component={CameraGestureScreen}
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen
+      name="Cameranumberscreen"
+      component={CameraNumberScreen}
       options={{ headerShown: false }}
     />
     <Stack.Screen

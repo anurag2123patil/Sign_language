@@ -7,12 +7,12 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
-const FLASK_URL = 'http://10.127.15.110:5000/detect_gesture'; // ← NEW ENDPOINT
+const FLASK_URL = 'http://10.127.15.110:5000/detect_gesture'; // ← NEW ENDPOINT (same for numbers)
 
 const FINGER_NAMES = ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky'];
 
-const CameraGestureScreen = ({ navigation, route }) => {
-    const { targetLetter } = route?.params || { targetLetter: 'अ' };
+const CameraNumberScreen = ({ navigation, route }) => {
+    const { targetLetter } = route?.params || { targetLetter: '१' };
 
     const [permission, requestPermission] = useCameraPermissions();
     const [isDetecting, setIsDetecting] = useState(false);
@@ -21,6 +21,7 @@ const CameraGestureScreen = ({ navigation, route }) => {
     const [statusMsg, setStatusMsg] = useState('Tap Start — hold hand clearly in view');
     const [confidence, setConfidence] = useState(0);
     const [ping, setPing] = useState(null);
+    const [detectedNumber, setDetectedNumber] = useState(null);
 
     const successScale = useRef(new Animated.Value(0)).current;
     const progressAnim = useRef(new Animated.Value(0)).current;
@@ -29,98 +30,44 @@ const CameraGestureScreen = ({ navigation, route }) => {
     const isRunning = useRef(false);
     const isSuccess = useRef(false);
 
-    const gestureMap = {
-        // VOWELS
-        'अ': [1, 1, 1, 0, 0],
-        'आ': [1, 1, 1, 0, 0],
-        'इ': [0, 1, 0, 0, 0],
-        'ई': [0, 1, 1, 0, 0],
-        'उ': [1, 0, 0, 0, 0],
-        'ऊ': [1, 1, 0, 0, 0],
-        'ए': [0, 1, 0, 0, 0],
-        'ऐ': [0, 1, 1, 0, 0],
-        'ओ': [0, 0, 0, 0, 0],
-        'औ': [0, 0, 0, 0, 0],
-        // CONSONANTS
-        'क': [1, 0, 0, 0, 0],
-        'ख': [1, 1, 1, 1, 1],
-        'ग': [1, 1, 1, 0, 0],
-        'घ': [1, 1, 1, 1, 0],
-        'ङ': [1, 1, 1, 1, 1],
-        'च': [0, 1, 1, 1, 0],
-        'छ': [1, 0, 0, 0, 0],
-        'ज': [0, 1, 1, 1, 0],
-        'झ': [0, 1, 1, 0, 0],
-        'ञ': [1, 1, 1, 1, 1],
-        'ट': [0, 0, 0, 0, 0],
-        'ठ': [1, 1, 1, 1, 0],
-        'ड': [0, 1, 1, 1, 1],
-        'ढ': [0, 0, 0, 0, 0],
-        'ण': [1, 1, 1, 1, 0],
-        'त': [0, 0, 0, 0, 0],
-        'थ': [0, 1, 0, 0, 0],
-        'द': [0, 1, 1, 0, 0],
-        'ध': [0, 0, 0, 0, 0],
-        'न': [0, 1, 1, 1, 1],
-        'प': [1, 1, 1, 1, 0],
-        'फ': [1, 1, 1, 1, 1],
-        'ब': [0, 0, 0, 0, 0],
-        'भ': [0, 0, 0, 0, 0],
-        'म': [0, 0, 0, 0, 0],
-        'य': [0, 1, 0, 0, 0],
-        'र': [1, 1, 1, 1, 1],
-        'ल': [0, 1, 1, 0, 0],
-        'व': [0, 0, 0, 0, 0],
-        'श': [1, 1, 1, 1, 1],
-        'ष': [0, 1, 1, 0, 0],
-        'स': [1, 1, 1, 1, 1],
-        'ह': [1, 1, 0, 0, 0],
+    // Updated number gestures with correct patterns
+    const numberGestures = {
+        '१': [0, 1, 0, 0, 0],  // 1 - Index only
+        '२': [0, 1, 1, 0, 0],  // 2 - Index + Middle
+        '३': [0, 1, 1, 1, 0],  // 3 - Three fingers
+        '४': [0, 1, 1, 1, 1],  // 4 - Four fingers
+        '५': [1, 1, 1, 1, 1],  // 5 - All open
+        '६': [0, 0, 1, 1, 1],  // 6 - Middle + Ring + Pinky
+        '७': [1, 1, 0, 1, 1],  // 7 - Thumb + Index + Ring + Pinky
+        '८': [1, 0, 1, 1, 1],  // 8 - Thumb + Middle + Ring + Pinky
+        '९': [1, 1, 1, 0, 1],  // 9 - Thumb + Index + Middle + Pinky
+        '१०': [1, 0, 0, 0, 0], // 10 - Thumb only
     };
 
-    const gestureHint = {
-        'अ': 'Thumb + 2 fingers up, face palm forward',
-        'आ': 'Thumb + 2 fingers up, tilt wrist sideways',
-        'इ': 'Only index finger up, thumb bent ☝️',
-        'ई': 'Index + Middle up, peace sign ✌️',
-        'उ': 'Only thumb up 👍',
-        'ऊ': 'Thumb + Index forming circle (OK sign) 👌',
-        'ए': 'Index finger up only, thumb down ☝️',
-        'ऐ': 'Index + Middle up, thumb curled down ✌️',
-        'ओ': 'Make a closed fist ✊',
-        'औ': 'Make a tight closed fist ✊',
-        'क': 'Thumb extended, rest down 👍',
-        'ख': 'All fingers extended, open palm ✋',
-        'ग': 'Thumb + Index + Middle up',
-        'घ': 'All fingers up except pinky',
-        'ङ': 'All fingers extended, open palm ✋',
-        'च': 'Index + Middle + Ring up',
-        'छ': 'Thumb extended, rest down 👍',
-        'ज': 'Index + Middle + Ring up',
-        'झ': 'Index + Middle up only ✌️',
-        'ञ': 'All fingers extended, open palm ✋',
-        'ट': 'Make a closed fist ✊',
-        'ठ': 'All fingers up except pinky',
-        'ड': 'All fingers except thumb up',
-        'ढ': 'Make a closed fist ✊',
-        'ण': 'All fingers up except pinky',
-        'त': 'Make a closed fist ✊',
-        'थ': 'Only index finger up ☝️',
-        'द': 'Index + Middle up ✌️',
-        'ध': 'Make a closed fist ✊',
-        'न': 'All fingers except thumb up',
-        'प': 'All fingers up except pinky',
-        'फ': 'All fingers extended, open palm ✋',
-        'ब': 'Make a closed fist ✊',
-        'भ': 'Make a closed fist ✊',
-        'म': 'Make a closed fist ✊',
-        'य': 'Only index finger up ☝️',
-        'र': 'All fingers extended, open palm ✋',
-        'ल': 'Index + Middle up ✌️',
-        'व': 'Make a closed fist ✊',
-        'श': 'All fingers extended, open palm ✋',
-        'ष': 'Index + Middle up ✌️',
-        'स': 'All fingers extended, open palm ✋',
-        'ह': 'Thumb + Index up 👌',
+    const numberNames = {
+        '१': { english: '1', pronunciation: 'Ek', marathi: 'एक' },
+        '२': { english: '2', pronunciation: 'Don', marathi: 'दोन' },
+        '३': { english: '3', pronunciation: 'Teen', marathi: 'तीन' },
+        '४': { english: '4', pronunciation: 'Char', marathi: 'चार' },
+        '५': { english: '5', pronunciation: 'Pach', marathi: 'पाच' },
+        '६': { english: '6', pronunciation: 'Saha', marathi: 'सहा' },
+        '७': { english: '7', pronunciation: 'Sat', marathi: 'सात' },
+        '८': { english: '8', pronunciation: 'Aath', marathi: 'आठ' },
+        '९': { english: '9', pronunciation: 'Nau', marathi: 'नऊ' },
+        '१०': { english: '10', pronunciation: 'Daha', marathi: 'दहा' },
+    };
+
+    const numberHints = {
+        '१': 'Show 1 - Index finger pointing up ☝️',
+        '२': 'Show 2 - Index and middle finger extended ✌️',
+        '३': 'Show 3 - Three fingers extended',
+        '४': 'Show 4 - Four fingers extended',
+        '५': 'Show 5 - Open palm with all fingers ✋',
+        '६': 'Show 6 - Middle + Ring + Pinky',
+        '७': 'Show 7 - Thumb + Index + Ring + Pinky',
+        '८': 'Show 8 - Thumb + Middle + Ring + Pinky',
+        '९': 'Show 9 - Thumb + Index + Middle + Pinky',
+        '१०': 'Show 10 - Thumb only 👍',
     };
 
     useEffect(() => {
@@ -192,6 +139,7 @@ const CameraGestureScreen = ({ navigation, route }) => {
                 // ← CHANGED: New response field names
                 if (data.fingers?.length > 0) setFingerStatus(data.fingers);
                 if (typeof data.confidence === 'number') setConfidence(data.confidence);
+                if (data.detectedGesture) setDetectedNumber(data.detectedGesture);  // ← CHANGED: detected_letter → detectedGesture
                 setStatusMsg(data.message || '');
 
                 if (data.match === true) {
@@ -214,6 +162,7 @@ const CameraGestureScreen = ({ navigation, route }) => {
         setIsDetecting(true);
         setConfidence(0);
         setFingerStatus([]);
+        setDetectedNumber(null);
         setStatusMsg('Detecting...');
         detectionLoop();
     };
@@ -225,6 +174,7 @@ const CameraGestureScreen = ({ navigation, route }) => {
         setFingerStatus([]);
         setConfidence(0);
         setPing(null);
+        setDetectedNumber(null);
     };
 
     const handleRetry = () => {
@@ -234,6 +184,7 @@ const CameraGestureScreen = ({ navigation, route }) => {
         setConfidence(0);
         setFingerStatus([]);
         setPing(null);
+        setDetectedNumber(null);
         setStatusMsg('Tap Start — hold hand clearly in view');
     };
 
@@ -245,7 +196,7 @@ const CameraGestureScreen = ({ navigation, route }) => {
 
     if (!permission.granted) {
         return (
-            <LinearGradient colors={['#3498db', '#2980b9']} style={styles.centered}>
+            <LinearGradient colors={['#667EEA', '#764BA2']} style={styles.centered}>
                 <Text style={styles.permissionText}>Camera permission needed</Text>
                 <TouchableOpacity style={styles.permissionButton} onPress={requestPermission}>
                     <Text style={styles.permissionButtonText}>Grant Permission</Text>
@@ -254,7 +205,8 @@ const CameraGestureScreen = ({ navigation, route }) => {
         );
     }
 
-    const target = gestureMap[targetLetter] || [];
+    const target = numberGestures[targetLetter] || [];
+    const numberInfo = numberNames[targetLetter] || {};
 
     return (
         <View style={styles.container}>
@@ -278,10 +230,13 @@ const CameraGestureScreen = ({ navigation, route }) => {
                 </TouchableOpacity>
 
                 <View style={styles.targetBox}>
-                    <Text style={styles.targetLabel}>Sign this:</Text>
-                    <Text style={styles.targetLetter}>{targetLetter}</Text>
+                    <Text style={styles.targetLabel}>Show Number:</Text>
+                    <View style={styles.targetNumberDisplay}>
+                        <Text style={styles.targetNumber}>{targetLetter}</Text>
+                        <Text style={styles.targetNumberEnglish}>{numberInfo.english}</Text>
+                    </View>
                     <Text style={styles.hintInline}>
-                        {gestureHint[targetLetter] || ''}
+                        {numberHints[targetLetter] || ''}
                     </Text>
                 </View>
 
@@ -312,6 +267,11 @@ const CameraGestureScreen = ({ navigation, route }) => {
 
             <View style={styles.statusBanner}>
                 <Text style={styles.statusText}>{statusMsg}</Text>
+                {detectedNumber && detectedNumber !== targetLetter && (
+                    <Text style={styles.detectedText}>
+                        (Detected: {detectedNumber})
+                    </Text>
+                )}
             </View>
 
             {fingerStatus.length > 0 && (
@@ -336,7 +296,7 @@ const CameraGestureScreen = ({ navigation, route }) => {
 
             {!isDetecting && !showSuccess && (
                 <View style={styles.hintBox}>
-                    <Text style={styles.hintTitle}>Target pattern for {targetLetter}:</Text>
+                    <Text style={styles.hintTitle}>Finger positions for {targetLetter} ({numberInfo.english}):</Text>
                     <View style={styles.hintDots}>
                         {FINGER_NAMES.map((name, i) => (
                             <View key={name} style={styles.hintDotWrapper}>
@@ -349,6 +309,11 @@ const CameraGestureScreen = ({ navigation, route }) => {
                                 <Text style={styles.hintLabel}>{target[i] === 1 ? '↑' : '↓'}</Text>
                             </View>
                         ))}
+                    </View>
+                    <View style={styles.numberInfoBox}>
+                        <Text style={styles.numberInfoText}>
+                            📌 {numberInfo.pronunciation} = {numberInfo.marathi}
+                        </Text>
                     </View>
                 </View>
             )}
@@ -377,8 +342,15 @@ const CameraGestureScreen = ({ navigation, route }) => {
                         <LinearGradient colors={['#2ecc71', '#27ae60']} style={styles.successGradient}>
                             <Text style={styles.successEmoji}>🎉</Text>
                             <Text style={styles.successTitle}>Correct!</Text>
-                            <Text style={styles.successLetter}>{targetLetter}</Text>
-                            <Text style={styles.successSub}>You signed it perfectly!</Text>
+                            
+                            <View style={styles.successNumberBox}>
+                                <Text style={styles.successNumber}>{targetLetter}</Text>
+                                <Text style={styles.successNumberLabel}>
+                                    {numberInfo.english} ({numberInfo.pronunciation})
+                                </Text>
+                            </View>
+                            
+                            <Text style={styles.successSub}>You showed the number perfectly!</Text>
 
                             <TouchableOpacity
                                 style={styles.continueButton}
@@ -406,7 +378,7 @@ const styles = StyleSheet.create({
     centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     permissionText: { color: 'white', fontSize: 18, marginBottom: 20 },
     permissionButton: { backgroundColor: 'white', padding: 15, borderRadius: 10 },
-    permissionButtonText: { color: '#3498db', fontWeight: 'bold', fontSize: 16 },
+    permissionButtonText: { color: '#667EEA', fontWeight: 'bold', fontSize: 16 },
     scanOverlay: { position: 'absolute', top: '25%', left: '10%', width: '80%', height: '50%' },
     scanCornerTL: { position: 'absolute', top: 0, left: 0, width: 30, height: 30, borderTopWidth: 3, borderLeftWidth: 3, borderColor: '#2ecc71' },
     scanCornerTR: { position: 'absolute', top: 0, right: 0, width: 30, height: 30, borderTopWidth: 3, borderRightWidth: 3, borderColor: '#2ecc71' },
@@ -415,9 +387,11 @@ const styles = StyleSheet.create({
     topOverlay: { position: 'absolute', top: 0, left: 0, right: 0, paddingTop: 50, paddingHorizontal: 20, paddingBottom: 15, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(0,0,0,0.55)' },
     backButton: { padding: 10 },
     backButtonText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
-    targetBox: { alignItems: 'center' },
-    targetLabel: { color: 'rgba(255,255,255,0.8)', fontSize: 13 },
-    targetLetter: { color: 'white', fontSize: 52, fontWeight: 'bold' },
+    targetBox: { alignItems: 'center', flex: 1 },
+    targetLabel: { color: 'rgba(255,255,255,0.8)', fontSize: 12 },
+    targetNumberDisplay: { flexDirection: 'row', alignItems: 'baseline', gap: 6, marginVertical: 4 },
+    targetNumber: { color: 'white', fontSize: 48, fontWeight: 'bold' },
+    targetNumberEnglish: { color: 'rgba(255,255,255,0.9)', fontSize: 16, fontWeight: '600' },
     pingBox: { width: 60, alignItems: 'flex-end' },
     pingText: { color: 'rgba(255,255,255,0.5)', fontSize: 11 },
     progressContainer: { position: 'absolute', top: 148, left: 20, right: 20, flexDirection: 'row', alignItems: 'center', gap: 10 },
@@ -425,7 +399,8 @@ const styles = StyleSheet.create({
     progressBarFill: { height: '100%', borderRadius: 5 },
     progressLabel: { fontSize: 13, fontWeight: 'bold', width: 70, textAlign: 'right' },
     statusBanner: { position: 'absolute', top: 175, left: 20, right: 20, backgroundColor: 'rgba(0,0,0,0.65)', borderRadius: 12, paddingVertical: 10, paddingHorizontal: 16, alignItems: 'center' },
-    statusText: { color: 'white', fontSize: 15 },
+    statusText: { color: 'white', fontSize: 15, fontWeight: '500' },
+    detectedText: { color: 'rgba(255,255,255,0.7)', fontSize: 12, marginTop: 4 },
     fingerIndicators: { position: 'absolute', bottom: 120, flexDirection: 'row', justifyContent: 'center', width: '100%', gap: 10 },
     fingerDotWrapper: { alignItems: 'center', gap: 3 },
     fingerDot: { width: 48, height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: 'rgba(255,255,255,0.25)' },
@@ -433,11 +408,13 @@ const styles = StyleSheet.create({
     fingerExpected: { color: 'rgba(255,255,255,0.6)', fontSize: 10 },
     hintBox: { position: 'absolute', bottom: 120, left: 20, right: 20, backgroundColor: 'rgba(0,0,0,0.7)', borderRadius: 16, padding: 16, alignItems: 'center' },
     hintTitle: { color: 'rgba(255,255,255,0.8)', fontSize: 13, marginBottom: 10 },
-    hintDots: { flexDirection: 'row', gap: 10 },
+    hintDots: { flexDirection: 'row', gap: 10, marginBottom: 12 },
     hintDotWrapper: { alignItems: 'center', gap: 3 },
     hintDot: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center' },
     hintDotText: { color: 'white', fontWeight: 'bold', fontSize: 13 },
     hintLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 14 },
+    numberInfoBox: { backgroundColor: 'rgba(102, 126, 234, 0.2)', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginTop: 8 },
+    numberInfoText: { color: 'rgba(255,255,255,0.9)', fontSize: 12, fontWeight: '500' },
     bottomControls: { position: 'absolute', bottom: 40, width: '100%', alignItems: 'center' },
     startButton: { backgroundColor: '#2ecc71', paddingVertical: 16, paddingHorizontal: 50, borderRadius: 30, elevation: 6, shadowColor: '#2ecc71', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.5, shadowRadius: 8 },
     startButtonText: { color: 'white', fontWeight: 'bold', fontSize: 18 },
@@ -449,7 +426,9 @@ const styles = StyleSheet.create({
     successGradient: { padding: 35, alignItems: 'center' },
     successEmoji: { fontSize: 65 },
     successTitle: { fontSize: 34, fontWeight: 'bold', color: 'white', marginTop: 8 },
-    successLetter: { fontSize: 90, fontWeight: 'bold', color: 'white' },
+    successNumberBox: { alignItems: 'center', marginVertical: 16 },
+    successNumber: { fontSize: 80, fontWeight: 'bold', color: 'white' },
+    successNumberLabel: { fontSize: 16, color: 'rgba(255,255,255,0.9)', marginTop: 4 },
     successSub: { fontSize: 16, color: 'rgba(255,255,255,0.9)', marginBottom: 28 },
     continueButton: { backgroundColor: 'white', paddingVertical: 14, paddingHorizontal: 50, borderRadius: 25, marginBottom: 12 },
     continueButtonText: { color: '#27ae60', fontWeight: 'bold', fontSize: 18 },
@@ -458,4 +437,4 @@ const styles = StyleSheet.create({
     hintInline: { color: 'rgba(255,255,255,0.75)', fontSize: 11, textAlign: 'center', marginTop: 2 },
 });
 
-export default CameraGestureScreen;
+export default CameraNumberScreen;
