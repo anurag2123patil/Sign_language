@@ -1,6 +1,19 @@
 // Image mapping for sign language letters
 // This file imports all the sign language images
 
+const NumberImages = {
+  '1': require('../../assets/numbers/1.png'),
+  '2': require('../../assets/numbers/2.png'),
+  '3': require('../../assets/numbers/3.png'),
+  '4': require('../../assets/numbers/4.png'),
+  '5': require('../../assets/numbers/5.png'),
+  '6': require('../../assets/numbers/6.png'),
+  '7': require('../../assets/numbers/7.png'),
+  '8': require('../../assets/numbers/8.png'),
+  '9': require('../../assets/numbers/9.png'),
+  '10': require('../../assets/numbers/10.png'),
+};
+
 const MarathiLetters = {
   'अ': require('../../assets/signs/Marathi/अ.jpg'),
   'आ': require('../../assets/signs/Marathi/आ.jpg'),
@@ -52,10 +65,11 @@ const MarathiLetters = {
 
 // Function to get image source
 export const getImageSource = (letter) => {
-  return MarathiLetters[letter] || null;
+  return MarathiLetters[letter] || NumberImages[letter] || null;
 };
 
 export default {
   MarathiLetters,
+  NumberImages,
   getImageSource,
 };

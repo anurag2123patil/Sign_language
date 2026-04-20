@@ -7,7 +7,7 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
-const FLASK_URL = 'http://10.127.15.110:5000/detect_gesture'; // ← NEW ENDPOINT (same for numbers)
+const FLASK_URL = 'http://10.49.86.70:5000/detect_gesture'; // ← NEW ENDPOINT (same for numbers)
 
 const FINGER_NAMES = ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky'];
 
@@ -120,7 +120,7 @@ const CameraNumberScreen = ({ navigation, route }) => {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         image: photo.base64,
-                        targetGesture: targetLetter,  // ← CHANGED: targetLetter → targetGesture
+                        targetLetter: targetLetter,  // matches backend field name
                     }),
                 });
 
