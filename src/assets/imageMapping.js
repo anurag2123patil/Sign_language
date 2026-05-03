@@ -2,16 +2,16 @@
 // This file imports all the sign language images
 
 const NumberImages = {
-  '1': require('../../assets/numbers/1.png'),
-  '2': require('../../assets/numbers/2.png'),
-  '3': require('../../assets/numbers/3.png'),
-  '4': require('../../assets/numbers/4.png'),
-  '5': require('../../assets/numbers/5.png'),
-  '6': require('../../assets/numbers/6.png'),
-  '7': require('../../assets/numbers/7.png'),
-  '8': require('../../assets/numbers/8.png'),
-  '9': require('../../assets/numbers/9.png'),
-  '10': require('../../assets/numbers/10.png'),
+  '1': require('../../assets/numbers/1.jpg'),
+  '2': require('../../assets/numbers/2.jpg'),
+  '3': require('../../assets/numbers/3.jpg'),
+  '4': require('../../assets/numbers/4.jpg'),
+  '5': require('../../assets/numbers/5.jpg'),
+  '6': require('../../assets/numbers/6.jpg'),
+  '7': require('../../assets/numbers/7.jpg'),
+  '8': require('../../assets/numbers/8.jpg'),
+  '9': require('../../assets/numbers/9.jpg'),
+  '10': require('../../assets/numbers/10.jpg'),
 };
 
 const MarathiLetters = {
@@ -22,7 +22,7 @@ const MarathiLetters = {
   'उ': require('../../assets/signs/Marathi/उ.jpg'),
   'ऊ': require('../../assets/signs/Marathi/ऊ.jpg'),
   'ए': require('../../assets/signs/Marathi/ए.jpg'),
-   'ऐ': require('../../assets/signs/Marathi/ऐ.jpg'),
+  'ऐ': require('../../assets/signs/Marathi/ऐ.jpg'),
   'ओ': require('../../assets/signs/Marathi/ओ.jpg'),
   'औ': require('../../assets/signs/Marathi/औ.jpg'),
 

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import {
+  ToastAndroid,
+  Alert,
   View,
   Text,
   TextInput,
@@ -16,8 +18,20 @@ const LoginScreen = ({ navigation }) => {
   const [password, setPassword] = useState('');
 
   const handleLogin = () => {
-    // No authentication - just navigate to main app
-    navigation.navigate('MainApp');
+    const validEmail = 'ssbtcoet@gmail.com';
+    const validPassword = 'student';
+
+    if (email === validEmail && password === validPassword) {
+      // Credentials correct — navigate as before
+      navigation.navigate('MainApp');
+    } else {
+      // Show toast/alert for invalid credentials
+      if (Platform.OS === 'android') {
+        ToastAndroid.show('Invalid credentials. Please try again.', ToastAndroid.SHORT);
+      } else {
+        Alert.alert('Login Failed', 'Invalid credentials. Please try again.');
+      }
+    }
   };
 
   return (
