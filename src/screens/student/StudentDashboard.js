@@ -50,10 +50,10 @@ const StudentDashboard = ({ navigation }) => {
     <View style={styles.quickActionsContainer}>
       <Text style={styles.sectionTitle}>Quick Actions</Text>
       <View style={styles.actionsGrid}>
-        <TouchableOpacity style={styles.actionCard} onPress={navigateToJoinClass}>
+        {/* <TouchableOpacity style={styles.actionCard} onPress={navigateToJoinClass}>
           <Text style={styles.actionIcon}>📚</Text>
           <Text style={styles.actionText}>Join Class</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         
         <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('Practice')}>
           <Text style={styles.actionIcon}>✍️</Text>
@@ -122,14 +122,14 @@ const StudentDashboard = ({ navigation }) => {
           <Text style={styles.moduleDescription}>Practice math with sign language</Text>
         </TouchableOpacity>
         
-        <TouchableOpacity 
+        {/* <TouchableOpacity 
           style={[styles.moduleCard, { backgroundColor: Colors.science }]}
           onPress={() => navigation.navigate('ScienceModule')}
         >
           <Text style={styles.moduleIcon}>🔬</Text>
           <Text style={styles.moduleTitle}>Science</Text>
           <Text style={styles.moduleDescription}>Explore science concepts</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
     </View>
   );
@@ -143,7 +143,7 @@ const StudentDashboard = ({ navigation }) => {
 
       {renderQuickActions()}
 
-      <View style={styles.classesContainer}>
+      {/* <View style={styles.classesContainer}>
         <Text style={styles.sectionTitle}>My Classes</Text>
         {classes.length > 0 ? (
           classes.map(renderClassCard)
@@ -155,7 +155,7 @@ const StudentDashboard = ({ navigation }) => {
             </TouchableOpacity>
           </View>
         )}
-      </View>
+      </View> */}
 
       {renderLearningModules()}
     </ScrollView>

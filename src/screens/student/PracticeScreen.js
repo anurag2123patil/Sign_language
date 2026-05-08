@@ -17,14 +17,14 @@ const PracticeScreen = ({ navigation }) => {
         <Text style={styles.practiceDescription}>Practice writing Marathi words and sentences</Text>
       </TouchableOpacity>
       
-      <TouchableOpacity
+      {/* <TouchableOpacity
         style={[styles.practiceCard, { backgroundColor: Colors.typing }]}
         onPress={() => navigation.navigate('TypingPractice')}
       >
         <Text style={styles.practiceIcon}>⌨️</Text>
         <Text style={styles.practiceTitle}>Typing Practice</Text>
         <Text style={styles.practiceDescription}>Improve your typing speed and accuracy</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </View>
   );
 };

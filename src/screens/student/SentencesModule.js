@@ -12,23 +12,23 @@ const SentencesModule = ({ navigation }) => {
   const [currentSentence, setCurrentSentence] = useState(0);
 
   const marathiSentences = [
-    { 
-      sentence: 'माझे नाव अनुराग आहे।', 
+    {
+      sentence: 'माझे नाव अनुराग आहे।',
       meaning: 'स्वतःची ओळख करून देणे',
       category: 'Introduction'
     },
-    { 
-      sentence: 'तुम्ही कसे आहात?', 
+    {
+      sentence: 'तुम्ही कसे आहात?',
       meaning: 'कुशलक्षेम विचारणे',
       category: 'Greeting'
     },
-    { 
-      sentence: 'मला मदत करा।', 
+    {
+      sentence: 'मला मदत करा।',
       meaning: 'मदतीची विनंती',
       category: 'Request'
     },
-    { 
-      sentence: 'धन्यवाद।', 
+    {
+      sentence: 'धन्यवाद।',
       meaning: 'कृतज्ञता व्यक्त करणे',
       category: 'Gratitude'
     },
@@ -48,15 +48,15 @@ const SentencesModule = ({ navigation }) => {
       </View>
 
       <View style={styles.controls}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.controlButton, currentSentence === 0 && styles.disabledButton]}
           onPress={() => setCurrentSentence(Math.max(0, currentSentence - 1))}
           disabled={currentSentence === 0}
         >
           <Text style={styles.controlButtonText}>← Previous</Text>
         </TouchableOpacity>
-        
-        <TouchableOpacity 
+
+        <TouchableOpacity
           style={[styles.controlButton, currentSentence === marathiSentences.length - 1 && styles.disabledButton]}
           onPress={() => setCurrentSentence(Math.min(marathiSentences.length - 1, currentSentence + 1))}
           disabled={currentSentence === marathiSentences.length - 1}
